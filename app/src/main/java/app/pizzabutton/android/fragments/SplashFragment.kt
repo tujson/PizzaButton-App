@@ -89,6 +89,7 @@ class SplashFragment : Fragment(R.layout.fragment_splash) {
             AuthUI.getInstance()
                 .createSignInIntentBuilder()
                 .setAvailableProviders(providers)
+                .setLogo(R.drawable.pizza)
                 .build()
         )
     }
