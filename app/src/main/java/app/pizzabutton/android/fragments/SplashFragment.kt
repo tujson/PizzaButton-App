@@ -3,13 +3,10 @@ package app.pizzabutton.android.fragments
 import android.app.Activity
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import app.pizzabutton.android.R
 import app.pizzabutton.android.models.User
 import com.firebase.ui.auth.AuthUI
@@ -41,9 +38,15 @@ class SplashFragment : Fragment(R.layout.fragment_splash) {
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     snapshot.getValue<User>()?.let {
-                        // TODO: Navigate to HomeFragment
+                        findNavController().navigate(
+                            SplashFragmentDirections.actionSplashFragmentToHomeFragment(it)
+                        )
                     } ?: run {
-                        // TODO: Navigate to RegisterFragment
+                        findNavController().navigate(
+                            SplashFragmentDirections.actionSplashFragmentToRegisterFragment(
+                                firebaseUserUid
+                            )
+                        )
                     }
                 }
 
