@@ -1,2 +1,3 @@
-include ':app'
+include ':wearos'
+include ':phone'
 rootProject.name = "Pizza Button"
