@@ -43,9 +43,7 @@ class SplashFragment : Fragment(R.layout.fragment_splash) {
                         )
                     } ?: run {
                         findNavController().navigate(
-                            SplashFragmentDirections.actionSplashFragmentToRegisterFragment(
-                                firebaseUserUid
-                            )
+                            SplashFragmentDirections.actionSplashFragmentToRegisterFragment()
                         )
                     }
                 }
