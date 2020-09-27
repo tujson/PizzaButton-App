@@ -2,4 +2,15 @@
     <string name="app_name">Pizza Button</string>
 
     <string name="pizza_description">Picture of a pizza</string>
+
+    <string name="name">Name</string>
+    <string name="address">Address</string>
+    <string name="phone_number">Phone number</string>
+    <string name="register">Register</string>
+
+    <string name="deliver_a">Deliver a</string>
+    <string name="pizza_to">pizza to</string>
+    <string name="order">Order</string>
+
+    <string name="large_cheese">large cheese</string>
 </resources>
