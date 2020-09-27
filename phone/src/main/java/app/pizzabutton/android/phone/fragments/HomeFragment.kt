@@ -1,5 +1,6 @@
 package app.pizzabutton.android.phone.fragments
 
+import android.location.Geocoder
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.style.UnderlineSpan
@@ -9,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.navArgs
+import app.pizzabutton.android.common.PizzaFinder
 import app.pizzabutton.android.phone.adapters.OrderAdapter
 import app.pizzabutton.android.phone.databinding.FragmentHomeBinding
 import app.pizzabutton.android.common.models.User
@@ -76,10 +78,14 @@ class HomeFragment : Fragment() {
                     )
                 }
             })
+
     }
 
     private fun submitOrder() {
-        TODO()
+        val pizzaFinder = PizzaFinder(requireContext().applicationContext)
+        pizzaFinder.getNearestPizza(user.address) { closestStore ->
+            Log.v(TAG, "Closest pizza store: $closestStore")
+        }
     }
 
     private fun updateUserView(updatedUser: User) {

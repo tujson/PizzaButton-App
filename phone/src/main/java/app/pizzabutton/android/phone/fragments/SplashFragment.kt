@@ -66,7 +66,6 @@ class SplashFragment : Fragment(R.layout.fragment_splash) {
 
         val signInActivityResultLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
-
         ) { activityResult ->
             if (activityResult.resultCode == Activity.RESULT_OK) {
                 FirebaseAuth.getInstance().currentUser?.let {
@@ -79,7 +78,6 @@ class SplashFragment : Fragment(R.layout.fragment_splash) {
                 }
             } else {
                 Log.e(TAG, "Failed to sign in.")
-                /// TODO: Show error message
             }
         }
 

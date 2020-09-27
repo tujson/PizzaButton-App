@@ -1,13 +1,18 @@
 package app.pizzabutton.android.wearos.fragments
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.core.view.children
 import androidx.navigation.fragment.findNavController
 import app.pizzabutton.android.common.models.User
 import app.pizzabutton.android.wearos.R
@@ -28,6 +33,8 @@ class SignInFragment : Fragment() {
     private var _binding: FragmentSignInBinding? = null
     private val binding get() = _binding!!
 
+    private lateinit var googleSignInActivityResultLauncher: ActivityResultLauncher<Intent>
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -39,20 +46,17 @@ class SignInFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.btnSignIn.children.forEach {
+            if (it is TextView) {
+                it.setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
+            }
+        }
+
         binding.btnSignIn.setOnClickListener {
             signIn()
         }
-    }
 
-    private fun signIn() {
-        val googleSignInOptions = GoogleSignInOptions
-            .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestId()
-            .build()
-
-        val googleSignInClient = GoogleSignIn.getClient(requireContext(), googleSignInOptions)
-
-        val googleSignInActivityResultLauncher = registerForActivityResult(
+        googleSignInActivityResultLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { activityResult ->
             if (activityResult.resultCode == Activity.RESULT_OK) {
@@ -66,6 +70,16 @@ class SignInFragment : Fragment() {
                 Log.e(TAG, "Result code not OK")
             }
         }
+    }
+
+    private fun signIn() {
+        val googleSignInOptions = GoogleSignInOptions
+            .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestId()
+            .requestProfile()
+            .requestEmail()
+            .build()
+        val googleSignInClient = GoogleSignIn.getClient(requireContext(), googleSignInOptions)
 
         googleSignInActivityResultLauncher.launch(
             googleSignInClient.signInIntent
@@ -78,10 +92,12 @@ class SignInFragment : Fragment() {
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     snapshot.getValue<User>()?.let {
+                        Log.v(TAG, "User id: ${it.id}")
                         findNavController().navigate(
                             SignInFragmentDirections.actionSignInFragmentToHomeFragment(it)
                         )
                     } ?: run {
+                        Log.v(TAG, "Unregistered id: $firebaseUserUid")
                         TODO("Tell user to register on phone")
                     }
                 }
