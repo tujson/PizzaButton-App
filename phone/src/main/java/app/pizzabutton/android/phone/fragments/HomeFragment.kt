@@ -11,7 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.navArgs
 import app.pizzabutton.android.phone.adapters.OrderAdapter
 import app.pizzabutton.android.phone.databinding.FragmentHomeBinding
-import app.pizzabutton.android.phone.models.User
+import app.pizzabutton.android.common.models.User
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener

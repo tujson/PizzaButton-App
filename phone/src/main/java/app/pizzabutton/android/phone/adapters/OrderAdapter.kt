@@ -4,7 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import app.pizzabutton.android.phone.databinding.CardOrderBinding
-import app.pizzabutton.android.phone.models.Order
+import app.pizzabutton.android.common.models.Order
 import java.text.SimpleDateFormat
 import java.util.*
 

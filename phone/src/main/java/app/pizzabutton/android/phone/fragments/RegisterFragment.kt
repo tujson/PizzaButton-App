@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import app.pizzabutton.android.phone.databinding.FragmentRegisterBinding
-import app.pizzabutton.android.phone.models.User
+import app.pizzabutton.android.common.models.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.ktx.database

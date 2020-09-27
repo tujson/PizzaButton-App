@@ -7,8 +7,8 @@ import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import app.pizzabutton.android.common.models.User
 import app.pizzabutton.android.phone.R
-import app.pizzabutton.android.phone.models.User
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
