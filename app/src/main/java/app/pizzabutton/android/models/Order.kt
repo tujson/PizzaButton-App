@@ -5,8 +5,8 @@ import kotlinx.android.parcel.Parcelize
 
 @Parcelize
 data class Order(
-    val timePlaced: Long,
-    val timeETA: Long,
-    val transcript: String,
-    val store: Store,
+    var timePlaced: Long = 0L,
+    var timeETA: Long = 0L,
+    var transcript: String = "",
+    var store: Store = Store(),
 ) : Parcelable

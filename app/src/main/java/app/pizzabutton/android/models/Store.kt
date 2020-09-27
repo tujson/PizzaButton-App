@@ -5,7 +5,7 @@ import kotlinx.android.parcel.Parcelize
 
 @Parcelize
 data class Store(
-    val name: String,
-    val address: String,
-    val phoneNumber: String,
+    var name: String = "",
+    var address: String = "",
+    var phoneNumber: String = "",
 ) : Parcelable
