@@ -10,5 +10,5 @@ data class User(
     var address: String = "",
     var phoneNumber: String = "",
     var defaultPizza: String = "",
-    var orderHistory: List<Order> = listOf(),
+    var orderHistory: MutableList<Order> = mutableListOf(),
 ) : Parcelable
