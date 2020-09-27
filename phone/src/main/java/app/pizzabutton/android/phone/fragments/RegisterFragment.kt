@@ -1,4 +1,4 @@
-package app.pizzabutton.android.fragments
+package app.pizzabutton.android.phone.fragments
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -6,8 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import app.pizzabutton.android.databinding.FragmentRegisterBinding
-import app.pizzabutton.android.models.User
+import app.pizzabutton.android.phone.databinding.FragmentRegisterBinding
+import app.pizzabutton.android.phone.models.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.ktx.database

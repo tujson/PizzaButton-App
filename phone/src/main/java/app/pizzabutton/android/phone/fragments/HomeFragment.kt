@@ -1,17 +1,17 @@
-package app.pizzabutton.android.fragments
+package app.pizzabutton.android.phone.fragments
 
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.style.UnderlineSpan
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.navArgs
-import app.pizzabutton.android.adapters.OrderAdapter
-import app.pizzabutton.android.databinding.FragmentHomeBinding
-import app.pizzabutton.android.models.User
+import app.pizzabutton.android.phone.adapters.OrderAdapter
+import app.pizzabutton.android.phone.databinding.FragmentHomeBinding
+import app.pizzabutton.android.phone.models.User
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener

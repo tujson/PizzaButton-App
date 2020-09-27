@@ -1,4 +1,4 @@
-package app.pizzabutton.android.models
+package app.pizzabutton.android.phone.models
 
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize

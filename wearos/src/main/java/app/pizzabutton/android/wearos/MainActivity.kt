@@ -1,4 +1,4 @@
-package app.pizzabutton.android.phone
+package app.pizzabutton.android.wearos
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity

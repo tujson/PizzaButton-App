@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/splashFragment"
-        android:name="app.pizzabutton.android.fragments.SplashFragment"
+        android:name="app.pizzabutton.android.phone.fragments.SplashFragment"
         android:label="fragment_splash"
         tools:layout="@layout/fragment_splash" >
         <action
@@ -19,7 +19,7 @@
     </fragment>
     <fragment
         android:id="@+id/registerFragment"
-        android:name="app.pizzabutton.android.fragments.RegisterFragment"
+        android:name="app.pizzabutton.android.phone.fragments.RegisterFragment"
         android:label="fragment_register"
         tools:layout="@layout/fragment_register">
         <action
@@ -28,11 +28,11 @@
     </fragment>
     <fragment
         android:id="@+id/homeFragment"
-        android:name="app.pizzabutton.android.fragments.HomeFragment"
+        android:name="app.pizzabutton.android.phone.fragments.HomeFragment"
         android:label="fragment_home"
         tools:layout="@layout/fragment_home">
         <argument
             android:name="user"
-            app:argType="app.pizzabutton.android.models.User" />
+            app:argType="app.pizzabutton.android.phone.models.User" />
     </fragment>
 </navigation>
