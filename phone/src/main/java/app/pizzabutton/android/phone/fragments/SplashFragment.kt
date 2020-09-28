@@ -10,6 +10,7 @@ import androidx.navigation.fragment.findNavController
 import app.pizzabutton.android.common.models.User
 import app.pizzabutton.android.phone.R
 import com.firebase.ui.auth.AuthUI
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -54,6 +55,11 @@ class SplashFragment : Fragment(R.layout.fragment_splash) {
                         "Failed to retrieve user from Firebase Realtime Database",
                         error.toException()
                     )
+                    Snackbar.make(
+                        requireView(),
+                        "Failed to retrieve user profile.",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
                 }
             })
     }
@@ -75,9 +81,15 @@ class SplashFragment : Fragment(R.layout.fragment_splash) {
                         TAG,
                         "User successfully logged in but is null. Potential error with Firebase Auth."
                     )
+                    Snackbar.make(
+                        requireView(),
+                        "Failed to retrieve auth user.",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
                 }
             } else {
                 Log.e(TAG, "Failed to sign in.")
+                Snackbar.make(requireView(), "Failed to sign in.", Snackbar.LENGTH_SHORT).show()
             }
         }
 
