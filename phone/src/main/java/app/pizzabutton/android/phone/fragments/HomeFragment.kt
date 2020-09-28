@@ -1,5 +1,6 @@
 package app.pizzabutton.android.phone.fragments
 
+import android.graphics.Paint
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.style.UnderlineSpan
@@ -54,59 +55,66 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.btnOrder.setOnClickListener {
-            submitOrder()
-        }
+        with(binding) {
+            tvDefaultPizza.paintFlags =
+                tvDefaultPizza.paintFlags or Paint.UNDERLINE_TEXT_FLAG
+            tvAddress.paintFlags =
+                tvAddress.paintFlags or Paint.UNDERLINE_TEXT_FLAG
 
-        binding.ibVolume.setOnClickListener {
-            isVolumeOn = !isVolumeOn
+            btnOrder.setOnClickListener {
+                submitOrder()
+            }
 
-            binding.ibVolume.backgroundTintList =
-                ContextCompat.getColorStateList(
-                    requireContext(),
-                    if (isVolumeOn) {
-                        R.color.colorSecondary
-                    } else {
-                        R.color.red_light
-                    }
+            ibVolume.setOnClickListener {
+                isVolumeOn = !isVolumeOn
+
+                ibVolume.backgroundTintList =
+                    ContextCompat.getColorStateList(
+                        requireContext(),
+                        if (isVolumeOn) {
+                            R.color.colorSecondary
+                        } else {
+                            R.color.red_light
+                        }
+                    )
+
+                ibVolume.setImageDrawable(
+                    ContextCompat.getDrawable(
+                        requireContext(),
+                        if (isVolumeOn) {
+                            R.drawable.volume_on
+                        } else {
+                            R.drawable.volume_off
+                        }
+                    )
                 )
+            }
 
-            binding.ibVolume.setImageDrawable(
-                ContextCompat.getDrawable(
-                    requireContext(),
-                    if (isVolumeOn) {
-                        R.drawable.volume_on
-                    } else {
-                        R.drawable.volume_off
-                    }
+            ibMic.setOnClickListener {
+                isMicOn = !isMicOn
+                pizzaOrderer?.toggleMic(isMicOn)
+
+                ibMic.backgroundTintList =
+                    ContextCompat.getColorStateList(
+                        requireContext(),
+                        if (isVolumeOn) {
+                            R.color.colorSecondary
+                        } else {
+                            R.color.red_light
+                        }
+                    )
+
+                ibMic.setImageDrawable(
+                    ContextCompat.getDrawable(
+                        requireContext(),
+                        if (isMicOn) {
+                            R.drawable.mic_on
+                        } else {
+                            R.drawable.mic_off
+                        }
+                    )
                 )
-            )
-        }
-
-        binding.ibMic.setOnClickListener {
-            isMicOn = !isMicOn
-            pizzaOrderer?.toggleMic(isMicOn)
-
-            binding.ibMic.backgroundTintList =
-                ContextCompat.getColorStateList(
-                    requireContext(),
-                    if (isVolumeOn) {
-                        R.color.colorSecondary
-                    } else {
-                        R.color.red_light
-                    }
-                )
-
-            binding.ibMic.setImageDrawable(
-                ContextCompat.getDrawable(
-                    requireContext(),
-                    if (isMicOn) {
-                        R.drawable.mic_on
-                    } else {
-                        R.drawable.mic_off
-                    }
-                )
-            )
+            }
         }
     }
 
@@ -136,15 +144,8 @@ class HomeFragment : Fragment() {
 
     private fun subscribeUi(adapter: OrderAdapter) {
         userViewModel.userLiveData.observe(viewLifecycleOwner) { newUser ->
-            val defaultPizza = SpannableString(newUser.defaultPizza).apply {
-                setSpan(UnderlineSpan(), 0, this.length, 0)
-            }
-            binding.tvDefaultPizza.text = defaultPizza
-
-            val address = SpannableString(newUser.address).apply {
-                setSpan(UnderlineSpan(), 0, this.length, 0)
-            }
-            binding.tvAddress.text = address
+            binding.tvDefaultPizza.text = newUser.defaultPizza
+            binding.tvAddress.text = newUser.address
 
             adapter.submitList(newUser.orderHistory)
         }
