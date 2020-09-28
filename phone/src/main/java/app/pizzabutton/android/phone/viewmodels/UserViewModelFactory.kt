@@ -1,8 +1,7 @@
-package app.pizzabutton.android.phone
+package app.pizzabutton.android.phone.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import app.pizzabutton.android.phone.viewmodels.UserViewModel
 
 class UserViewModelFactory(private val userId: String) :
     ViewModelProvider.Factory {

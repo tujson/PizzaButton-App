@@ -2,8 +2,6 @@ package app.pizzabutton.android.phone.fragments
 
 import android.graphics.Paint
 import android.os.Bundle
-import android.text.SpannableString
-import android.text.style.UnderlineSpan
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -15,7 +13,7 @@ import app.pizzabutton.android.common.PizzaCallInterface
 import app.pizzabutton.android.common.PizzaFinder
 import app.pizzabutton.android.common.PizzaOrderer
 import app.pizzabutton.android.phone.R
-import app.pizzabutton.android.phone.UserViewModelFactory
+import app.pizzabutton.android.phone.viewmodels.UserViewModelFactory
 import app.pizzabutton.android.phone.adapters.OrderAdapter
 import app.pizzabutton.android.phone.databinding.FragmentHomeBinding
 import app.pizzabutton.android.phone.viewmodels.UserViewModel
