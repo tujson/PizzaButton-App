@@ -34,10 +34,8 @@ class OrderAdapter : ListAdapter<Order, RecyclerView.ViewHolder>(OrderDiffCallba
                 tvDate.text = dateSdf.format(timePlaced.time)
                 tvTime.text = timeSdf.format(timePlaced.time)
 
-                tvPizza.text = order.pizza
-                tvAddress.text = order.address
-
-                tvStoreName.text = order.store.name
+                this.order = order
+                executePendingBindings()
             }
         }
     }
