@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.navArgs
 import app.pizzabutton.android.common.PizzaFinder
+import app.pizzabutton.android.common.PizzaOrderer
 import app.pizzabutton.android.phone.adapters.OrderAdapter
 import app.pizzabutton.android.phone.databinding.FragmentHomeBinding
 import app.pizzabutton.android.common.models.User
@@ -85,6 +86,8 @@ class HomeFragment : Fragment() {
         val pizzaFinder = PizzaFinder(requireContext().applicationContext)
         pizzaFinder.getNearestPizza(user.address) { closestStore ->
             Log.v(TAG, "Closest pizza store: $closestStore")
+            val pizzaOrderer = PizzaOrderer(user, closestStore!!)
+            pizzaOrderer.orderPizza(requireContext())
         }
     }
 
