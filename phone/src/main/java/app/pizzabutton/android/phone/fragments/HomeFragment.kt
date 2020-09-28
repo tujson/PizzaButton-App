@@ -1,6 +1,5 @@
 package app.pizzabutton.android.phone.fragments
 
-import android.location.Geocoder
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.style.UnderlineSpan
@@ -8,13 +7,15 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.navArgs
 import app.pizzabutton.android.common.PizzaFinder
 import app.pizzabutton.android.common.PizzaOrderer
+import app.pizzabutton.android.common.models.User
+import app.pizzabutton.android.phone.R
 import app.pizzabutton.android.phone.adapters.OrderAdapter
 import app.pizzabutton.android.phone.databinding.FragmentHomeBinding
-import app.pizzabutton.android.common.models.User
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
@@ -31,6 +32,9 @@ class HomeFragment : Fragment() {
 
     private lateinit var user: User
     private lateinit var adapter: OrderAdapter
+
+    private var isVolumeOn = false
+    private var isMicOn = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -80,6 +84,57 @@ class HomeFragment : Fragment() {
                 }
             })
 
+        binding.ibVolume.setOnClickListener {
+            if (isVolumeOn) {
+                binding.ibVolume.backgroundTintList =
+                    ContextCompat.getColorStateList(requireContext(), R.color.red_light)
+                binding.ibVolume.setImageDrawable(
+                    ContextCompat.getDrawable(
+                        requireContext(),
+                        R.drawable.volume_off
+                    )
+                )
+
+                isVolumeOn = false
+            } else {
+                binding.ibVolume.backgroundTintList =
+                    ContextCompat.getColorStateList(requireContext(), R.color.colorSecondary)
+                binding.ibVolume.setImageDrawable(
+                    ContextCompat.getDrawable(
+                        requireContext(),
+                        R.drawable.volume_on
+                    )
+                )
+
+                isVolumeOn = true
+            }
+        }
+
+        binding.ibMic.setOnClickListener {
+            if (isMicOn) {
+                binding.ibMic.backgroundTintList =
+                    ContextCompat.getColorStateList(requireContext(), R.color.red_light)
+                binding.ibMic.setImageDrawable(
+                    ContextCompat.getDrawable(
+                        requireContext(),
+                        R.drawable.mic_off
+                    )
+                )
+                
+                isMicOn = false
+            } else {
+                binding.ibMic.backgroundTintList =
+                    ContextCompat.getColorStateList(requireContext(), R.color.colorSecondary)
+                binding.ibMic.setImageDrawable(
+                    ContextCompat.getDrawable(
+                        requireContext(),
+                        R.drawable.mic_on
+                    )
+                )
+
+                isMicOn = true
+            }
+        }
     }
 
     private fun submitOrder() {
