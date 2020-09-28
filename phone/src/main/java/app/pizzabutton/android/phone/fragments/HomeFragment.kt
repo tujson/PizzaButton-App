@@ -9,31 +9,25 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.navArgs
+import androidx.lifecycle.ViewModelProvider
 import app.pizzabutton.android.common.PizzaCallInterface
 import app.pizzabutton.android.common.PizzaFinder
 import app.pizzabutton.android.common.PizzaOrderer
-import app.pizzabutton.android.common.models.User
 import app.pizzabutton.android.phone.R
+import app.pizzabutton.android.phone.UserViewModelFactory
 import app.pizzabutton.android.phone.adapters.OrderAdapter
 import app.pizzabutton.android.phone.databinding.FragmentHomeBinding
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.ValueEventListener
-import com.google.firebase.database.ktx.database
-import com.google.firebase.database.ktx.getValue
-import com.google.firebase.ktx.Firebase
+import app.pizzabutton.android.phone.viewmodels.UserViewModel
 import kotlin.concurrent.thread
 
 private val TAG = HomeFragment::class.java.simpleName
 
 class HomeFragment : Fragment() {
-    private val args: HomeFragmentArgs by navArgs()
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var user: User
-    private lateinit var adapter: OrderAdapter
+    private lateinit var userViewModel: UserViewModel
+    private lateinit var userViewModelFactory: UserViewModelFactory
 
     private var pizzaOrderer: PizzaOrderer? = null
     private var isVolumeOn = false
@@ -45,116 +39,94 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
+
+        userViewModelFactory =
+            UserViewModelFactory(HomeFragmentArgs.fromBundle(requireArguments()).user.id)
+        userViewModel = ViewModelProvider(this, userViewModelFactory).get(UserViewModel::class.java)
+
+        val adapter = OrderAdapter()
+        binding.rvOrderHistory.adapter = adapter
+        subscribeUi(adapter)
+
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        user = args.user
-        user.orderHistory.sortBy { it.timePlaced }
-
-        val defaultPizza = SpannableString(user.defaultPizza).apply {
-            setSpan(UnderlineSpan(), 0, this.length, 0)
-        }
-        binding.tvDefaultPizza.text = defaultPizza
-
-        val address = SpannableString(user.address).apply {
-            setSpan(UnderlineSpan(), 0, this.length, 0)
-        }
-        binding.tvAddress.text = address
 
         binding.btnOrder.setOnClickListener {
             submitOrder()
         }
 
-        adapter = OrderAdapter(user.orderHistory)
-        binding.rvOrderHistory.adapter = adapter
-
-        Firebase.database.reference.child(user.id)
-            .addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    snapshot.getValue<User>()?.let {
-                        updateUserView(it)
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Log.e(
-                        TAG,
-                        "onCancelled while listening to Firebase Realtime Database",
-                        error.toException()
-                    )
-                }
-            })
-
         binding.ibVolume.setOnClickListener {
-            if (isVolumeOn) {
-                binding.ibVolume.backgroundTintList =
-                    ContextCompat.getColorStateList(requireContext(), R.color.red_light)
-                binding.ibVolume.setImageDrawable(
-                    ContextCompat.getDrawable(
-                        requireContext(),
-                        R.drawable.volume_off
-                    )
+            isVolumeOn = !isVolumeOn
+
+            binding.ibVolume.backgroundTintList =
+                ContextCompat.getColorStateList(
+                    requireContext(),
+                    if (isVolumeOn) {
+                        R.color.colorSecondary
+                    } else {
+                        R.color.red_light
+                    }
                 )
 
-                isVolumeOn = false
-            } else {
-                binding.ibVolume.backgroundTintList =
-                    ContextCompat.getColorStateList(requireContext(), R.color.colorSecondary)
-                binding.ibVolume.setImageDrawable(
-                    ContextCompat.getDrawable(
-                        requireContext(),
+            binding.ibVolume.setImageDrawable(
+                ContextCompat.getDrawable(
+                    requireContext(),
+                    if (isVolumeOn) {
                         R.drawable.volume_on
-                    )
+                    } else {
+                        R.drawable.volume_off
+                    }
                 )
-
-                isVolumeOn = true
-            }
+            )
         }
 
         binding.ibMic.setOnClickListener {
-            if (isMicOn) {
-                binding.ibMic.backgroundTintList =
-                    ContextCompat.getColorStateList(requireContext(), R.color.red_light)
-                binding.ibMic.setImageDrawable(
-                    ContextCompat.getDrawable(
-                        requireContext(),
-                        R.drawable.mic_off
-                    )
-                )
-
-                isMicOn = false
-            } else {
-                binding.ibMic.backgroundTintList =
-                    ContextCompat.getColorStateList(requireContext(), R.color.colorSecondary)
-                binding.ibMic.setImageDrawable(
-                    ContextCompat.getDrawable(
-                        requireContext(),
-                        R.drawable.mic_on
-                    )
-                )
-
-                isMicOn = true
-            }
-
+            isMicOn = !isMicOn
             pizzaOrderer?.toggleMic(isMicOn)
+
+            binding.ibMic.backgroundTintList =
+                ContextCompat.getColorStateList(
+                    requireContext(),
+                    if (isVolumeOn) {
+                        R.color.colorSecondary
+                    } else {
+                        R.color.red_light
+                    }
+                )
+
+            binding.ibMic.setImageDrawable(
+                ContextCompat.getDrawable(
+                    requireContext(),
+                    if (isMicOn) {
+                        R.drawable.mic_on
+                    } else {
+                        R.drawable.mic_off
+                    }
+                )
+            )
         }
     }
 
+    // TODO: Clean up using coroutines
     private fun submitOrder() {
         val pizzaFinder = PizzaFinder(requireContext().applicationContext)
-        pizzaFinder.getNearestPizza(user.address) { closestStore ->
+        pizzaFinder.getNearestPizza(userViewModel.userLiveData.value!!.address) { closestStore ->
             Log.v(TAG, "Closest pizza store: $closestStore")
-            pizzaOrderer = PizzaOrderer(user, closestStore!!, object : PizzaCallInterface {
-                override fun onConnected() {
-                    binding.cardActiveOrder.visibility = View.VISIBLE
-                }
+            pizzaOrderer = PizzaOrderer(
+                userViewModel.userLiveData.value!!,
+                closestStore!!,
+                object : PizzaCallInterface {
+                    override fun onConnected() {
+                        binding.cardActiveOrder.visibility = View.VISIBLE
+                    }
 
-                override fun onDisconnected() {
-                    binding.cardActiveOrder.visibility = View.GONE
-                }
-            })
+                    override fun onDisconnected() {
+                        binding.cardActiveOrder.visibility = View.GONE
+                    }
+                })
 
             thread {
                 pizzaOrderer?.orderPizza(requireContext())
@@ -162,25 +134,19 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun updateUserView(updatedUser: User) {
-        user.orderHistory.clear()
-        user.orderHistory.addAll(updatedUser.orderHistory)
-        user.orderHistory.sortByDescending { it.timePlaced }
-
-        user.name = updatedUser.name
-        user.address = updatedUser.address
-        user.phoneNumber = updatedUser.phoneNumber
-        user.defaultPizza = updatedUser.defaultPizza
-
-        activity?.runOnUiThread {
-            binding.tvDefaultPizza.text = SpannableString(user.defaultPizza).apply {
+    private fun subscribeUi(adapter: OrderAdapter) {
+        userViewModel.userLiveData.observe(viewLifecycleOwner) { newUser ->
+            val defaultPizza = SpannableString(newUser.defaultPizza).apply {
                 setSpan(UnderlineSpan(), 0, this.length, 0)
             }
-            binding.tvAddress.text = SpannableString(user.address).apply {
+            binding.tvDefaultPizza.text = defaultPizza
+
+            val address = SpannableString(newUser.address).apply {
                 setSpan(UnderlineSpan(), 0, this.length, 0)
             }
+            binding.tvAddress.text = address
 
-            adapter.notifyDataSetChanged()
+            adapter.submitList(newUser.orderHistory)
         }
     }
 

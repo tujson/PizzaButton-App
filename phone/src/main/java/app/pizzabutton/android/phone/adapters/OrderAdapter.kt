@@ -2,44 +2,50 @@ package app.pizzabutton.android.phone.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import app.pizzabutton.android.phone.databinding.CardOrderBinding
 import app.pizzabutton.android.common.models.Order
+import app.pizzabutton.android.phone.databinding.CardOrderBinding
 import java.text.SimpleDateFormat
 import java.util.*
 
-class OrderAdapter(private val orders: MutableList<Order>) :
-    RecyclerView.Adapter<OrderAdapter.ViewHolder>() {
+private val dateSdf = SimpleDateFormat("MMM dd", Locale.US)
+private val timeSdf = SimpleDateFormat("EEE, hh:mm a", Locale.US)
 
+class OrderAdapter : ListAdapter<Order, RecyclerView.ViewHolder>(OrderDiffCallback()) {
 
-    class ViewHolder(private val orderBinding: CardOrderBinding) :
-        RecyclerView.ViewHolder(orderBinding.root) {
-        private val dateSdf = SimpleDateFormat("MMM dd")
-        private val timeSdf = SimpleDateFormat("EEE, hh:mm a")
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+        OrderViewHolder(
+            CardOrderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        )
 
-        fun bindOrder(order: Order) {
-            val timePlacedCal = Calendar.getInstance()
-            timePlacedCal.timeInMillis = order.timePlaced
-            orderBinding.tvDate.text = dateSdf.format(timePlacedCal.time)
-            orderBinding.tvTime.text = timeSdf.format(timePlacedCal.time)
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        (holder as OrderViewHolder).bind(getItem(position))
+    }
 
-            orderBinding.tvPizza.text = order.pizza
-            orderBinding.tvAddress.text = order.address
+    class OrderViewHolder(
+        private val binding: CardOrderBinding
+    ) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(order: Order) {
+            val timePlaced = Calendar.getInstance()
+            timePlaced.timeInMillis = order.timePlaced
+            binding.apply {
+                tvDate.text = dateSdf.format(timePlaced.time)
+                tvTime.text = timeSdf.format(timePlaced.time)
 
-            // TODO: Add in horizontal scrollview to show more Store details
-            orderBinding.tvStoreName.text = order.store.name
+                tvPizza.text = order.pizza
+                tvAddress.text = order.address
+
+                tvStoreName.text = order.store.name
+            }
         }
     }
+}
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val orderBinding =
-            CardOrderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return ViewHolder(orderBinding)
-    }
+private class OrderDiffCallback : DiffUtil.ItemCallback<Order>() {
+    override fun areItemsTheSame(oldItem: Order, newItem: Order) =
+        oldItem.timePlaced == newItem.timePlaced
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bindOrder(orders[position])
-    }
-
-    override fun getItemCount() = orders.size
+    override fun areContentsTheSame(oldItem: Order, newItem: Order) = oldItem == newItem
 }
