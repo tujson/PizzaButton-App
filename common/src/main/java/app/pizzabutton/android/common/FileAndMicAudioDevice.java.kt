@@ -24,14 +24,13 @@ import java.nio.ByteBuffer
  * Taken from https://github.com/twilio/voice-quickstart-android/blob/a0b7b45a0b088b3d097618ea54fb70e609ed506e/exampleCustomAudioDevice/src/main/java/com/twilio/examplecustomaudiodevice/FileAndMicAudioDevice.java
  */
 
-class FileAndMicAudioDevice(private val context: Context) : AudioDevice {
+class FileAndMicAudioDevice(private val context: Context, private val inputStream: InputStream) : AudioDevice {
     private var keepAliveRendererRunnable = true
 
     // Average number of callbacks per second.
     private val BUFFERS_PER_SECOND = 1000 / CALLBACK_BUFFER_SIZE_MS
     private var fileWriteByteBuffer: ByteBuffer? = null
     private var writeBufferSize = 0
-    private var inputStream: InputStream? = null
     private var dataInputStream: DataInputStream? = null
     private var audioRecord: AudioRecord? = null
     private var micWriteBuffer: ByteBuffer? = null
@@ -143,7 +142,11 @@ class FileAndMicAudioDevice(private val context: Context) : AudioDevice {
                 )
                 var bytesWritten = 0
                 bytesWritten = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    writeOnLollipop(audioTrack, readByteBuffer, readByteBuffer!!.capacity())
+                    try {
+                        writeOnLollipop(audioTrack, readByteBuffer, readByteBuffer!!.capacity())
+                    } catch (e: IllegalStateException) {
+                        Log.v(TAG, "Writing data to call is interrupted.")
+                    }
                 } else {
                     writePreLollipop(audioTrack, readByteBuffer, readByteBuffer!!.capacity())
                 }
@@ -309,14 +312,7 @@ class FileAndMicAudioDevice(private val context: Context) : AudioDevice {
 
     // Capturer helper methods
     private fun initializeStreams() {
-        inputStream = null
         dataInputStream = null
-        inputStream = context.resources.openRawResource(
-            context.resources.getIdentifier(
-                "music",
-                "raw", context.packageName
-            )
-        )
         dataInputStream = DataInputStream(inputStream)
         try {
             val bytes = dataInputStream!!.skipBytes(WAV_FILE_HEADER_SIZE)

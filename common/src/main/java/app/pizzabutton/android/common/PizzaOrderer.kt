@@ -1,6 +1,10 @@
 package app.pizzabutton.android.common
 
 import android.content.Context
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
+import android.os.Build
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import app.pizzabutton.android.common.models.Store
@@ -12,23 +16,34 @@ import com.twilio.voice.Voice
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
+import java.io.InputStream
 import java.util.*
+import kotlin.concurrent.thread
 
 private val TAG = PizzaOrderer::class.java.simpleName
 private const val TWILIO_API_URL = BuildConfig.TWILIO_API_URL
 
-class PizzaOrderer(private val user: User, private val store: Store) {
+class PizzaOrderer(
+    private val user: User,
+    private val store: Store,
+    private val pizzaCallCallback: PizzaCallInterface
+) {
 
     var activeCall: Call? = null
     private var fileAndMicAudioDevice: FileAndMicAudioDevice? = null
     private var tts: TextToSpeech? = null
-
+    private lateinit var audioManager: AudioManager
+    private var savedAudioMode = AudioManager.MODE_INVALID
 
     fun orderPizza(context: Context) {
-        // TODO: Call store.
         val script = generateScript(user)
 
-        generateSpeech(script, context)
+        generateSpeech(script, context) {
+            thread { callPizzaStore(it, context) }
+        }
+    }
+
+    private fun callPizzaStore(inputStream: InputStream, context: Context) {
         val accessToken = getTwilioAccessToken()
 
         val params = hashMapOf<String, String>()
@@ -41,16 +56,21 @@ class PizzaOrderer(private val user: User, private val store: Store) {
         }
         // !!!!! DO NOT DELETE UNLESS YOU WANT TO CALL PIZZA STORE. EXTRA CHECK.
 
-        fileAndMicAudioDevice = FileAndMicAudioDevice(context.applicationContext).also {
-            Voice.setAudioDevice(it)
-        }
+        Log.v(TAG, "Token: $accessToken")
+        fileAndMicAudioDevice =
+            FileAndMicAudioDevice(context.applicationContext, inputStream)
+        Voice.setAudioDevice(fileAndMicAudioDevice!!)
+        audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        audioManager.isSpeakerphoneOn = true
 
         val connectOptions = ConnectOptions.Builder(accessToken)
             .params(params)
             .build()
         activeCall = Voice.connect(context, connectOptions, object : Call.Listener {
             override fun onConnectFailure(call: Call, callException: CallException) {
-                Log.v(TAG, "Call connect failed")
+                setAudioFocus(false)
+                pizzaCallCallback.onDisconnected()
+                Log.e(TAG, "Call connect failed: ${callException.errorCode}", callException)
             }
 
             override fun onRinging(call: Call) {
@@ -58,11 +78,14 @@ class PizzaOrderer(private val user: User, private val store: Store) {
             }
 
             override fun onConnected(call: Call) {
-                TODO("Not yet implemented")
+                setAudioFocus(true)
+                fileAndMicAudioDevice?.switchInput(true)
+                pizzaCallCallback.onConnected()
+                Log.v(TAG, "Connected")
             }
 
             override fun onReconnecting(call: Call, callException: CallException) {
-                Log.v(TAG, "Call reconnecting")
+                Log.e(TAG, "Call reconnecting", callException)
             }
 
             override fun onReconnected(call: Call) {
@@ -70,9 +93,50 @@ class PizzaOrderer(private val user: User, private val store: Store) {
             }
 
             override fun onDisconnected(call: Call, callException: CallException?) {
-                TODO("Not yet implemented")
+                setAudioFocus(false)
+                Log.e(TAG, "Disconnected", callException)
+                pizzaCallCallback.onDisconnected()
             }
         })
+    }
+
+    fun toggleMic(isMicOn: Boolean) {
+        fileAndMicAudioDevice?.switchInput(!isMicOn)
+    }
+
+    private fun setAudioFocus(setFocus: Boolean) {
+        if (setFocus) {
+            savedAudioMode = audioManager.getMode()
+            // Request audio focus before making any device switch.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val playbackAttributes = AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .build()
+                val focusRequest =
+                    AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                        .setAudioAttributes(playbackAttributes)
+                        .setAcceptsDelayedFocusGain(true)
+                        .setOnAudioFocusChangeListener { i: Int -> }
+                        .build()
+                audioManager.requestAudioFocus(focusRequest)
+            } else {
+                audioManager.requestAudioFocus(
+                    AudioManager.OnAudioFocusChangeListener { focusChange: Int -> },
+                    AudioManager.STREAM_VOICE_CALL,
+                    AudioManager.AUDIOFOCUS_GAIN_TRANSIENT
+                )
+            }
+            /*
+             * Start by setting MODE_IN_COMMUNICATION as default audio mode. It is
+             * required to be in this mode when playout and/or recording starts for
+             * best possible VoIP performance. Some devices have difficulties with speaker mode
+             * if this is not set.
+             */audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
+        } else {
+            audioManager.mode = savedAudioMode
+            audioManager.abandonAudioFocus(null)
+        }
     }
 
     private fun getTwilioAccessToken(): String {
@@ -93,13 +157,25 @@ class PizzaOrderer(private val user: User, private val store: Store) {
                 "I will pay using cash. Thanks!"
     }
 
-    private fun generateSpeech(script: String, context: Context) {
+    private fun generateSpeech(
+        script: String,
+        context: Context,
+        onFinishSynthesis: (InputStream) -> Unit
+    ) {
         tts = TextToSpeech(context) {
             tts?.language = Locale.US
-            val filename = "${System.currentTimeMillis()}-${user.name}.mp3"
+            val filename = "${System.currentTimeMillis()}-${user.name}.wav"
             val file = File(context.filesDir, filename)
             tts?.synthesizeToFile(script, null, file, filename)
             Log.v(TAG, "Finished TTS synthesis. Wrote to $filename.")
+            tts?.shutdown()
+            onFinishSynthesis(file.inputStream())
         }
     }
+}
+
+
+interface PizzaCallInterface {
+    fun onConnected()
+    fun onDisconnected()
 }

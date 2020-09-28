@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.navArgs
+import app.pizzabutton.android.common.PizzaCallInterface
 import app.pizzabutton.android.common.PizzaFinder
 import app.pizzabutton.android.common.PizzaOrderer
 import app.pizzabutton.android.common.models.User
@@ -22,6 +23,7 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.database.ktx.getValue
 import com.google.firebase.ktx.Firebase
+import kotlin.concurrent.thread
 
 private val TAG = HomeFragment::class.java.simpleName
 
@@ -33,6 +35,7 @@ class HomeFragment : Fragment() {
     private lateinit var user: User
     private lateinit var adapter: OrderAdapter
 
+    private var pizzaOrderer: PizzaOrderer? = null
     private var isVolumeOn = false
     private var isMicOn = false
 
@@ -120,7 +123,7 @@ class HomeFragment : Fragment() {
                         R.drawable.mic_off
                     )
                 )
-                
+
                 isMicOn = false
             } else {
                 binding.ibMic.backgroundTintList =
@@ -134,6 +137,8 @@ class HomeFragment : Fragment() {
 
                 isMicOn = true
             }
+
+            pizzaOrderer?.toggleMic(isMicOn)
         }
     }
 
@@ -141,8 +146,19 @@ class HomeFragment : Fragment() {
         val pizzaFinder = PizzaFinder(requireContext().applicationContext)
         pizzaFinder.getNearestPizza(user.address) { closestStore ->
             Log.v(TAG, "Closest pizza store: $closestStore")
-            val pizzaOrderer = PizzaOrderer(user, closestStore!!)
-            pizzaOrderer.orderPizza(requireContext())
+            pizzaOrderer = PizzaOrderer(user, closestStore!!, object : PizzaCallInterface {
+                override fun onConnected() {
+                    binding.cardActiveOrder.visibility = View.VISIBLE
+                }
+
+                override fun onDisconnected() {
+                    binding.cardActiveOrder.visibility = View.GONE
+                }
+            })
+
+            thread {
+                pizzaOrderer?.orderPizza(requireContext())
+            }
         }
     }
 
