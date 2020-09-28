@@ -1,5 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="app.pizzabutton.android.common">
 
-    /
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
 </manifest>

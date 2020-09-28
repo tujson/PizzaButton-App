@@ -56,6 +56,9 @@ class PizzaFinder(private val applicationContext: Context) {
             } else {
                 // TODO: Come up with a better way to find best prediction, e.g. prefer known pizza places
                 val bestPredictionPlaceId = validPredictions[0].placeId
+                validPredictions.forEach {
+                    Log.v(TAG, "Prediction: ${it.getFullText(null)}")
+                }
 
                 val placeFields =
                     listOf(Place.Field.NAME, Place.Field.ADDRESS, Place.Field.PHONE_NUMBER)

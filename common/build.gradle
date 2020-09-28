@@ -21,6 +21,8 @@ android {
             file("../secure.properties")?.withInputStream { secureProps.load(it) }
         }
         buildConfigField("String", "PLACES_API_KEY", (secureProps.getProperty("PLACES_API_KEY") ?: "\"\""))
+        buildConfigField("String", "TEST_PHONE_NUMBER", (secureProps.getProperty("TEST_PHONE_NUMBER") ?: "\"\""))
+        buildConfigField("String", "TWILIO_API_URL", (secureProps.getProperty("TWILIO_API_URL") ?: "\"\""))
     }
 
     buildTypes {
@@ -29,6 +31,15 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
@@ -36,7 +47,9 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
     implementation 'com.google.android.libraries.places:places:2.4.0'
-//    implementation 'com.twilio:voice-android:5.5.0'
+
+    implementation 'com.squareup.okhttp3:okhttp:4.9.0'
+    implementation 'com.twilio:voice-android:5.5.0'
 
     testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
