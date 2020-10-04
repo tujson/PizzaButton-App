@@ -16,6 +16,7 @@ import com.twilio.voice.AudioDeviceContext
 import com.twilio.voice.AudioFormat
 import tvo.webrtc.ThreadUtils
 import java.io.DataInputStream
+import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.nio.ByteBuffer
@@ -24,13 +25,14 @@ import java.nio.ByteBuffer
  * Taken from https://github.com/twilio/voice-quickstart-android/blob/a0b7b45a0b088b3d097618ea54fb70e609ed506e/exampleCustomAudioDevice/src/main/java/com/twilio/examplecustomaudiodevice/FileAndMicAudioDevice.java
  */
 
-class FileAndMicAudioDevice(private val inputStream: InputStream) : AudioDevice {
+class FileAndMicAudioDevice(private val context: Context, private var ttsFile: File) : AudioDevice {
     private var keepAliveRendererRunnable = true
 
     // Average number of callbacks per second.
     private val BUFFERS_PER_SECOND = 1000 / CALLBACK_BUFFER_SIZE_MS
     private var fileWriteByteBuffer: ByteBuffer? = null
     private var writeBufferSize = 0
+    private var inputStream: InputStream? = null
     private var dataInputStream: DataInputStream? = null
     private var audioRecord: AudioRecord? = null
     private var micWriteBuffer: ByteBuffer? = null
@@ -67,6 +69,11 @@ class FileAndMicAudioDevice(private val inputStream: InputStream) : AudioDevice 
                         bytesRead = it
                     } > -1
                 ) {
+                    Log.v(TAG, "bytesRead: $bytesRead")
+                    Log.v(TAG, "dataInputStream: $dataInputStream")
+                    Log.v(TAG, "fileWriteByteBuffer: $fileWriteByteBuffer")
+                    Log.v(TAG, "fileWriteByteBuffer capacity: ${fileWriteByteBuffer!!.capacity()}")
+
                     if (bytesRead == fileWriteByteBuffer!!.capacity()) {
                         AudioDevice.audioDeviceWriteCaptureData(
                             capturingAudioDeviceContext!!,
@@ -175,12 +182,12 @@ class FileAndMicAudioDevice(private val inputStream: InputStream) : AudioDevice 
         isMusicPlaying = playMusic
         if (playMusic) {
             initializeStreams()
-            capturerHandler!!.removeCallbacks(microphoneCapturerRunnable)
+            capturerHandler?.removeCallbacks(microphoneCapturerRunnable)
             stopRecording()
-            capturerHandler!!.post(fileCapturerRunnable)
+            capturerHandler?.post(fileCapturerRunnable)
         } else {
-            capturerHandler!!.removeCallbacks(fileCapturerRunnable)
-            capturerHandler!!.post(microphoneCapturerRunnable)
+            capturerHandler?.removeCallbacks(fileCapturerRunnable)
+            capturerHandler?.post(microphoneCapturerRunnable)
         }
     }
 
@@ -312,7 +319,12 @@ class FileAndMicAudioDevice(private val inputStream: InputStream) : AudioDevice 
 
     // Capturer helper methods
     private fun initializeStreams() {
+        inputStream = null
         dataInputStream = null
+//        inputStream = context.resources.openRawResource(context.resources.getIdentifier("manual",
+//            "raw", context.packageName
+//        ))
+        inputStream = ttsFile.inputStream()
         dataInputStream = DataInputStream(inputStream)
         try {
             val bytes = dataInputStream!!.skipBytes(WAV_FILE_HEADER_SIZE)

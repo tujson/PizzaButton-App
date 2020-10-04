@@ -10,10 +10,7 @@ import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import app.pizzabutton.android.common.models.Store
 import app.pizzabutton.android.common.models.User
-import com.twilio.voice.Call
-import com.twilio.voice.CallException
-import com.twilio.voice.ConnectOptions
-import com.twilio.voice.Voice
+import com.twilio.voice.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
@@ -38,14 +35,15 @@ class PizzaOrderer(
     private var savedAudioMode = AudioManager.MODE_INVALID
 
     fun orderPizza(context: Context) {
-        val script = generateScript(user)
+        val script =
+            generateScript(user).repeat(6) // There's a demo restriction that starts file playback earlier than expected.
 
         generateSpeech(script, context) {
-            thread { callPizzaStore(it, context) }
+            thread { callPizzaStore(ttsFile!!, context) }
         }
     }
 
-    private fun callPizzaStore(inputStream: InputStream, context: Context) {
+    private fun callPizzaStore(ttsFile: File, context: Context) {
         val accessToken = getTwilioAccessToken()
 
         val params = hashMapOf<String, String>()
@@ -58,9 +56,8 @@ class PizzaOrderer(
         }
         // !!!!! DO NOT DELETE UNLESS YOU WANT TO CALL PIZZA STORE. EXTRA CHECK.
 
-        Log.v(TAG, "Token: $accessToken")
         fileAndMicAudioDevice =
-            FileAndMicAudioDevice(inputStream)
+            FileAndMicAudioDevice(context, ttsFile)
         Voice.setAudioDevice(fileAndMicAudioDevice!!)
         audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         audioManager.isSpeakerphoneOn = true
@@ -162,7 +159,7 @@ class PizzaOrderer(
     private fun generateSpeech(
         script: String,
         context: Context,
-        onFinishSynthesis: (InputStream) -> Unit
+        onFinishSynthesis: () -> Unit
     ) {
         tts = TextToSpeech(context) {
             tts?.language = Locale.US
@@ -180,7 +177,7 @@ class PizzaOrderer(
                 Log.v(TAG, "Done TTS Synthesis: $utteranceId")
 
                 tts?.shutdown()
-                onFinishSynthesis(ttsFile!!.inputStream())
+                onFinishSynthesis()
             }
 
             override fun onError(utteranceId: String?) {

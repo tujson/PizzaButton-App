@@ -12,11 +12,15 @@ import androidx.lifecycle.ViewModelProvider
 import app.pizzabutton.android.common.PizzaCallInterface
 import app.pizzabutton.android.common.PizzaFinder
 import app.pizzabutton.android.common.PizzaOrderer
+import app.pizzabutton.android.phone.BuildConfig
 import app.pizzabutton.android.phone.R
 import app.pizzabutton.android.phone.viewmodels.UserViewModelFactory
 import app.pizzabutton.android.phone.adapters.OrderAdapter
 import app.pizzabutton.android.phone.databinding.FragmentHomeBinding
 import app.pizzabutton.android.phone.viewmodels.UserViewModel
+import com.microsoft.cognitiveservices.speech.SpeechConfig
+import com.microsoft.cognitiveservices.speech.SpeechRecognizer
+import java.util.*
 import kotlin.concurrent.thread
 
 private val TAG = HomeFragment::class.java.simpleName
@@ -28,6 +32,7 @@ class HomeFragment : Fragment() {
     private lateinit var userViewModel: UserViewModel
     private lateinit var userViewModelFactory: UserViewModelFactory
 
+    private var speechRecognizer: SpeechRecognizer? = null
     private var pizzaOrderer: PizzaOrderer? = null
     private var isVolumeOn = false
     private var isMicOn = false
@@ -46,6 +51,8 @@ class HomeFragment : Fragment() {
         val adapter = OrderAdapter()
         binding.rvOrderHistory.adapter = adapter
         subscribeUi(adapter)
+
+        startSpeechRecognition()
 
         return binding.root
     }
@@ -127,10 +134,13 @@ class HomeFragment : Fragment() {
                 object : PizzaCallInterface {
                     override fun onConnected() {
                         binding.cardActiveOrder.visibility = View.VISIBLE
+                        speechRecognizer?.startContinuousRecognitionAsync()
+
                     }
 
                     override fun onDisconnected() {
                         binding.cardActiveOrder.visibility = View.GONE
+                        speechRecognizer?.stopContinuousRecognitionAsync()
                     }
                 })
 
@@ -149,8 +159,23 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun startSpeechRecognition() {
+        val speechConfig = SpeechConfig.fromSubscription(
+            BuildConfig.AZURE_SUBSCRIPTION_KEY,
+            BuildConfig.AZURE_SERVICE_REGION
+        )
+        speechRecognizer = SpeechRecognizer(speechConfig)
+        speechRecognizer?.recognizing?.addEventListener { _, speechRecognitionEventArgs ->
+            Log.v(TAG, "Recognizing: ${speechRecognitionEventArgs.result.text}")
+            requireActivity().runOnUiThread {
+                binding.tvCallTranscript.text = speechRecognitionEventArgs.result.text
+            }
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        speechRecognizer?.stopContinuousRecognitionAsync()
     }
 }
