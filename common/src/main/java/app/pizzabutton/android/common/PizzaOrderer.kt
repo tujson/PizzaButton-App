@@ -6,6 +6,7 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import app.pizzabutton.android.common.models.Store
 import app.pizzabutton.android.common.models.User
@@ -32,6 +33,7 @@ class PizzaOrderer(
     var activeCall: Call? = null
     private var fileAndMicAudioDevice: FileAndMicAudioDevice? = null
     private var tts: TextToSpeech? = null
+    private var ttsFile: File? = null
     private lateinit var audioManager: AudioManager
     private var savedAudioMode = AudioManager.MODE_INVALID
 
@@ -58,7 +60,7 @@ class PizzaOrderer(
 
         Log.v(TAG, "Token: $accessToken")
         fileAndMicAudioDevice =
-            FileAndMicAudioDevice(context.applicationContext, inputStream)
+            FileAndMicAudioDevice(inputStream)
         Voice.setAudioDevice(fileAndMicAudioDevice!!)
         audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         audioManager.isSpeakerphoneOn = true
@@ -165,12 +167,26 @@ class PizzaOrderer(
         tts = TextToSpeech(context) {
             tts?.language = Locale.US
             val filename = "${System.currentTimeMillis()}-${user.name}.wav"
-            val file = File(context.filesDir, filename)
-            tts?.synthesizeToFile(script, null, file, filename)
-            Log.v(TAG, "Finished TTS synthesis. Wrote to $filename.")
-            tts?.shutdown()
-            onFinishSynthesis(file.inputStream())
+            ttsFile = File(context.filesDir, filename)
+            Log.v(TAG, "Started synthesis to $filename.")
+            tts?.synthesizeToFile(script, null, ttsFile, filename)
         }
+        tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+            override fun onStart(utteranceId: String?) {
+                Log.v(TAG, "Start TTS Synthesis: $utteranceId")
+            }
+
+            override fun onDone(utteranceId: String?) {
+                Log.v(TAG, "Done TTS Synthesis: $utteranceId")
+
+                tts?.shutdown()
+                onFinishSynthesis(ttsFile!!.inputStream())
+            }
+
+            override fun onError(utteranceId: String?) {
+                Log.e(TAG, "TTS Synthesis error: $utteranceId")
+            }
+        })
     }
 }
 

@@ -24,7 +24,7 @@ import java.nio.ByteBuffer
  * Taken from https://github.com/twilio/voice-quickstart-android/blob/a0b7b45a0b088b3d097618ea54fb70e609ed506e/exampleCustomAudioDevice/src/main/java/com/twilio/examplecustomaudiodevice/FileAndMicAudioDevice.java
  */
 
-class FileAndMicAudioDevice(private val context: Context, private val inputStream: InputStream) : AudioDevice {
+class FileAndMicAudioDevice(private val inputStream: InputStream) : AudioDevice {
     private var keepAliveRendererRunnable = true
 
     // Average number of callbacks per second.
