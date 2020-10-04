@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:gravity="center"
     tools:context=".fragments.HomeFragment">
 
-</FrameLayout>
+    <ImageButton
+        android:id="@+id/ivPizza"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="24dp"
+        android:background="?android:selectableItemBackground"
+        android:contentDescription="@string/pizza_description"
+        android:scaleType="fitXY"
+        android:src="@drawable/pizza" />
+
+</LinearLayout>
